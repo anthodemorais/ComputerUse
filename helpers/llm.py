@@ -1,8 +1,12 @@
+import os
+from dotenv import load_dotenv
 from huggingface_hub import InferenceClient, ChatCompletionOutputMessage
+
+load_dotenv()
 
 client = InferenceClient(
     provider="novita",
-    api_key="",
+    api_key=os.getenv("HF_API_KEY"),
 )
 
 def call_llm(messages):

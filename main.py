@@ -80,7 +80,7 @@ llm_plan = """
 messages = [
     {
         "role": "user",
-        "content": "Write a Python script that I can run to open the Outlook app and send an email to anthonyd-m@live.com saying 'Hello World!'. Use the library that best fits your needs, but it needs to work on Linux and it should use the OS like a human would, so it should use the mouse and keyboard to do the task."
+        "content": "Write a Python script that I can run to open the ThunderbirdMail app and send an email to anthonyd-m@live.com saying 'Hello World!'. Use the Dogtail library."
     },
    #  {
    #      "role": "system",
@@ -92,4 +92,79 @@ print(messages)
 
 llm_code = call_llm(messages)
 print(get_message_output(llm_code))
+
+
+
+"""
+Here's a Python script using Dogtail to automate sending an email through Thunderbird. Note that this requires proper accessibility setup in Thunderbird and Linux.
+
+```python
+#!/usr/bin/env python3
+import subprocess
+import time
+from dogtail.tree import root
+from dogtail.utils import run
+
+# Launch Thunderbird if not running
+try:
+    app = root.application('Thunderbird')
+except Exception:
+    subprocess.Popen(['thunderbird'])
+    time.sleep(10)  # Wait for Thunderbird to launch
+    app = root.application('Thunderbird')
+
+# Create new message using keyboard shortcut
+app.typeText('<Ctrl>N')
+time.sleep(3)  # Wait for compose window
+
+# Get compose window
+compose_win = app.window('Write:')
+
+# Fill recipient
+to_field = compose_win.findChild(
+    lambda x: x.roleName == 'text' and x.name == 'To'
+)
+to_field.textEntry = 'anthonyd-m@live.com'
+
+# Fill subject
+subject_field = compose_win.findChild(
+    lambda x: x.roleName == 'text' and x.name == 'Subject'
+)
+subject_field.textEntry = 'Hello from Dogtail'
+
+# Fill body (might need to click first depending on Thunderbird version)
+body_field = compose_win.findChild(
+    lambda x: x.roleName == 'document text' or x.roleName == 'text'
+)
+body_field.click()
+body_field.textEntry = 'Hello World!'
+
+# Send using keyboard shortcut (Ctrl+Enter)
+app.typeText('<Ctrl><Enter>')
+```
+
+Before running this script:
+
+1. Install dependencies:
+```bash
+sudo apt install python3-dogtail at-spi2-core
+pip3 install dogtail
+```
+
+2. Enable accessibility in Thunderbird:
+- Go to Preferences > Advanced > General
+- Click Config Editor
+- Search for `accessibility.force_disabled`
+- Set value to `0` and restart Thunderbird
+
+3. Make sure Thunderbird is configured with an email account
+
+The script will:
+1. Launch Thunderbird if not running
+2. Open a new message window
+3. Fill in recipient, subject, and body
+4. Send the email using keyboard shortcuts
+
+Note: UI element names may vary slightly between Thunderbird versions. You may need to adjust the element identifiers using `accerciser` (GUI inspector tool) for your specific setup.
+"""
 
