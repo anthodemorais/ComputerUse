@@ -1,6 +1,7 @@
 import sys
 import io
 from helpers.llm import call_llm, get_message_output
+from helpers.prompts import loop_prompt
 
 # In a loop, prompt AI with the problem and the actions that were done before.
 # AI needs to give the next action(s) to take from these possible actions:
@@ -12,56 +13,6 @@ from helpers.llm import call_llm, get_message_output
 
 # See this to add images to the prompt: https://huggingface.co/docs/huggingface_hub/package_reference/inference_client#huggingface_hub.InferenceClient.chat_completion.example-6
 
-prompt = """
-You are an AI agent that has access to a computer system to solve the user's problem.
-
-To make sure to solve the problem correctly, we proceed carefully step by step.
-
-These are the actions that where done before:
-- {actions_done}
-
-The result of the last action is: {last_action_result}
-
-After the last action, the content of the application {app_name} is:
-- {state}
-
-A screenshot will be attached to this prompt if the last action was to take a screenshot.
-
-Now you need to decide what to do next from these possible actions:
-- Open an application
-- Read the content of one of the open application to get the current state of the system
-- Take a screenshot of one of the open application to observe the current state of the system
-- Perform actions in one of the open application
-- Ask the user for more information
-
-Please give me the next action to take from these possible actions.
-Proceed carefully, think about it and don't output too many actions at once. Only base your actions on the application trees dumped by previous steps.
-
-Your output should only be a single small sentence explaining what to do and then a Python code snippet that does the action and returns the result of the action.
-The computer you have is using Ubuntu so to perform actions on the computer, dump the application trees or take screenshots, use the Dogtail library and pyautogui library.
-
-After opening an application or a window within that application, always dump the application tree and return it. Same after performing a few actions in an application.
-
-To dump the content of a window, don't use the dump method of Dogtail. Instead, use a function that will be provided to your program called get_dump_application_tree_code that takes in parameter the node you want to dump.
-
-To return the content of the application, return a formatted dictionary with 2 keys and values:
-- "tree": the application tree dumped with get_dump_application_tree_code
-- "application": the name of the application
-- "screenshots": if you take screenshots, return the images as a list here
-
-If you need to ask clarification to the user, output a sentence starting with "--- Ask the user: " and then the question.
-
-If you think the job is done, output a sentence starting with "--- Done: " and then the message to the user.
-
-These are the applications that you have access to:
-- Thunderbird Mail
-- LibreOffice Writer
-- LibreOffice Calc
-- LibreOffice Impress
-- Terminal
-- Firefox
-- File Manager
-"""
 
 def get_dump_application_tree_code(application):
     # Backup the original stdout
@@ -93,7 +44,7 @@ while not is_done:
     last_action_result_string = last_action_result if last_action_result else "successful"
     state_string = state if state else "unknown"
 
-    prompt_string = prompt.format(
+    prompt_string = loop_prompt.format(
         actions_done=actions_done_string,
         last_action_result=last_action_result_string,
         app_name=app_name,
@@ -139,23 +90,23 @@ while not is_done:
 """
 1.
 
-AI output: To send the email, I'll open Thunderbird Mail first.
-
 ```python
-from dogtail.config import config
-config.logDebugToStdOut = True
-config.logDebugToFile = False
+from dogtail import tree
+from dogtail import utils
+import pyautogui
 
-# Launch Thunderbird Mail
-from dogtail.procedural import start_app
-start_app('thunderbird')
+# Open Thunderbird Mail
+utils.run('thunderbird')
+thunderbird = tree.root.application('Thunderbird Mail')
 
-# Get application tree
-thunderbird_app = Application('thunderbird')
-tree = get_dump_application_tree_code(thunderbird_app)
+# Get the application tree
+tree_dump = get_dump_application_tree_code(thunderbird)
 
-# Return application state
-{"tree": tree, "application": "Thunderbird Mail"}
+# Return the application tree and name
+{
+    "tree": tree_dump,
+    "application": "Thunderbird Mail"
+}
 ```
 
 2. 

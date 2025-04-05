@@ -12,7 +12,7 @@ client = InferenceClient(
 def call_llm(messages):
     # This is for local work, when deployed, use the model directly or official API to not be limited by the number of tokens or requests
     completion = client.chat.completions.create(
-        model="deepseek-ai/DeepSeek-R1", 
+        model="deepseek-ai/DeepSeek-V3-0324", 
         messages=messages, 
         max_tokens=1000,
     )
