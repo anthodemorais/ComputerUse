@@ -28,11 +28,20 @@ def get_dump_application_tree_code(application):
 
 
 is_done = False
-actions_done = []
-app_name = None
+actions_done = [{
+    "actions": [
+        {
+            "action": "open_application",
+            "arguments": {
+                "application": "Thunderbird Mail"
+            }
+        }
+    ]
+}]
+app_name = "Thunderbird Mail"
 state = None
 screenshots = []
-last_action_result = None
+last_action_result = "successful"
 
 while not is_done:
     # Call the LLM with the prompt
@@ -90,22 +99,16 @@ while not is_done:
 """
 1.
 
-```python
-from dogtail import tree
-from dogtail import utils
-import pyautogui
-
-# Open Thunderbird Mail
-utils.run('thunderbird')
-thunderbird = tree.root.application('Thunderbird Mail')
-
-# Get the application tree
-tree_dump = get_dump_application_tree_code(thunderbird)
-
-# Return the application tree and name
+```json
 {
-    "tree": tree_dump,
-    "application": "Thunderbird Mail"
+    "actions": [
+        {
+            "action": "open_application",
+            "arguments": {
+                "application": "Thunderbird Mail"
+            }
+        }
+    ]
 }
 ```
 

@@ -38,23 +38,25 @@ Your goal is to gradually perform the actions on the computer to help the user.
 
 To make sure that we succeed in solving the problem, we proceed carefully step by step instead of trying to solve the problem all at once.
 
-Generate a Python code snippet that will be run on the computer within a function and perform the action you think is the best to take next.
+Generate a JSON blob that contains the actions you think are the best to take next.
 
-To perform actions, use the Dogtail library and pyautogui library.
+To help you with that, you will be provided with a dump of the current state of the system, including the applications that are open and their content.
 
-The actions you can take are:
-- Open an application
-- Read the content of one of the open application to get the current state of the system
-- Take a screenshot of one of the open application to visually observe the current state of the system
-- Perform actions in one of the open application
-- Ask the user for more information
+The dump of the current state is created using the Dogtail library.
 
-Your code should include the import you need and always return this:
-- "tree": the application tree dumped with get_dump_application_tree_code
-- "application": the name of the application
-- "screenshots": if you take screenshots, return the images as a list here (optional)
+Here are the actions and their arguments that you can include in your JSON blob:
+- open_application: Open an application
+- read_application: Read the content of an application using the Dogtail library
+    - Arguments: {{ "application": the application name }}
+- take_screenshot: Take a screenshot of an application
+    - Arguments: {{ "application": the application name, "screenshot_name": the name of the screenshot file }}
+- click: Click on an element within an application
+    - Arguments: {{ "element": the element on the screen to click on (based on the app dump), "application": the application name }}
+- type_text: Type text in an application
+    - Arguments: {{ "text": the text to type, "application": the application name }}
+- keyboard_shortcut: Use a keyboard shortcut in an application
+    - Arguments: {{ "shortcut": "Ctrl+S", "application": the application name }}
 
-To dump the content of a window, don't use the dump method of Dogtail. Instead, use a function that will be provided to your program called get_dump_application_tree_code that takes in parameter the node you want to dump.
 
 These are the applications that you have access to:
 - Thunderbird Mail
@@ -75,11 +77,36 @@ After the last action, the content of the application {app_name} is:
 
 If you need to ask clarification to the user, output a sentence starting with "--- Ask the user: " and then the question.
 
-If you think the job is done, output a sentence starting with "--- Done: " and then the message to the user.
+If you think the job is done, output this only "--- Done".
 
 Now you need to decide what to do next. Think about it before answering and don't output too many actions at once. Only base your actions on the application trees dumped by previous steps.
 
-Your output should be nothing else than a procedural Python script (no functions, no classes, no comments) that will be run on the computer.
+If you open an application, don't do anything else, just open it and in the next step, you will have the content of the application to work with.
+If you need to ask the user a question, don't do anything else, just ask the question and in the next step, you will have the answer to work with.
 
-If you open an application, dump the content and return it. If you take actions, you are limited to 3 at a time then dump the content and return it.
+The format of the JSON blob is:
+{{
+    "actions": [
+        {{
+            "action": "open_application",
+            "arguments": {{
+                "application": "application_name"
+            }}
+        }},
+        {{
+            "action": "read_application",
+            "arguments": {{
+                "application": "application_name"
+            }}
+        }},
+        {{
+            "action": "click",
+            "arguments": {{
+                "element": "element_name",
+                "application": "application_name"
+            }}
+        }},
+    ]
+}}
+
 """
